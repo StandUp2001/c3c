@@ -1,4 +1,5 @@
 #include "build/build.h"
+#include "build/convert.h"
 #include "compiler/compiler.h"
 #include "compiler_tests/tests.h"
 #include "utils/lib.h"
@@ -72,6 +73,10 @@ int main_real(int argc, const char *argv[])
 		case COMMAND_UNIT_TEST:
 			compiler_tests();
 			break;
+		case COMMAND_CONVERT:
+			convert_files(&build_options);
+			break;
+		case COMMAND_GENERATE_HEADERS:
 		case COMMAND_COMPILE:
 		case COMMAND_COMPILE_ONLY:
 		case COMMAND_COMPILE_RUN:

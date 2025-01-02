@@ -70,6 +70,7 @@ static void usage(bool full)
 	PRINTF("  headers <file1> [<file2> ...]                       Analyse files and generate C headers for public methods.");
 	PRINTF("  vendor-fetch <library> ...                          Fetches one or more libraries from the vendor collection.");
 	PRINTF("  project <subcommand> ...                            Manipulate or view project files.");
+	PRINTF("  convert <file1> [<file2> ...]                       Convert your C files to C3 files");
 	PRINTF("");
 	PRINTF(full ? "Options:" : "Common options:");
 	PRINTF("  -h -hh --help              - Print the help, -h for the normal options, -hh for the full help.");
@@ -316,6 +317,11 @@ static void parse_command(BuildOptions *options)
 	if (arg_match("dynamic-lib"))
 	{
 		options->command = COMMAND_DYNAMIC_LIB;
+		return;
+	}
+	if (arg_match("convert"))
+	{
+		options->command = COMMAND_CONVERT;
 		return;
 	}
 	if (arg_match("build"))

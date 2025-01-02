@@ -47,6 +47,7 @@ typedef enum
 	COMMAND_UNIT_TEST,
 	COMMAND_PRINT_SYNTAX,
 	COMMAND_PROJECT,
+	COMMAND_CONVERT,
 } CompilerCommand;
 
 typedef enum

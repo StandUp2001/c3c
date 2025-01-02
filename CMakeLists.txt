@@ -286,6 +286,8 @@ add_executable(c3c
         src/build/project_creation.c
         src/build/project_manipulation.c
         src/build/libraries.c
+        src/build/convert.c
+        src/build/convert.h
         src/compiler/ast.c
         src/compiler/bigint.c
         src/compiler/codegen_general.c
