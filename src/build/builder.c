@@ -71,6 +71,7 @@ bool command_accepts_files(CompilerCommand command)
 		case COMMAND_COMPILE_BENCHMARK:
 		case COMMAND_COMPILE_TEST:
 		case COMMAND_UNIT_TEST:
+		case COMMAND_CONVERT:
 			return true;
 		case COMMAND_MISSING:
 		case COMMAND_GENERATE_HEADERS:
@@ -122,6 +123,7 @@ bool command_passes_args(CompilerCommand command)
 		case COMMAND_TEST:
 		case COMMAND_VENDOR_FETCH:
 		case COMMAND_PROJECT:
+		case COMMAND_CONVERT:
 			return false;
 	}
 	UNREACHABLE
