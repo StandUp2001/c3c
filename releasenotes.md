@@ -3,13 +3,53 @@
 ## 0.6.6 Change list
 
 ### Changes / improvements
-None
+- Split help into normal and "full" help, #1703
+- Removed 'headers' command line option.
+- Add `enum.from_ordinal` and `fault.from_ordinal`
+- Deprecate cast-style conversion from integer <-> enum.
+- Make deprecation an error in test mode.
+- Add `--win-vs-dirs` to override VS detection dirs.
+- Add `"name"` project property to override the name of the resulting binary. #1719
+- Improved `add-project` to take arguments.
+- Improve error reporting when using type names as the function argument #1750.
+- Improve ordering of method registration to support adding methods to generic modules with method constraints #1746
+- Support experimental `@operator(construct)` operator overload.
+- Allow using 'var' to declare lambdas in functions.
 
 ### Fixes
 - Fix case trying to initialize a `char[*]*` from a String.
+- Fix Map & HashMap `put_all_for_create` not copying all elements, causing `init_from_map` to create incomplete copy.
+- Fix bug when a macro calling an extern function was called in another module also declaring and calling the same function. #1690
+- `static-lib` and `dynamic-lib` options from the command line now produces headers.
+- Fix bug outputting exported functions without predefined extname.
+- Fix problem where crt1 was linked for dynamic libraries on Linux and BSD. #1710
+- Fix CRT detection on Arch Linux.
+- Fix lexer allowing a trailing underscore (_) with hex and binary literals.
+- Fix `--list-operators` CLI command printing underscore (_) and hash (#).
+- Fix bug in temp allocator when temp memory is exhausted and allocation needs overaligned mem. #1715
+- Incorrectly handles distinct enums and pointers with '+=' and '-=' #1717.
+- Prevent DString from being initialized with "".
+- Fix bug in OnStackAllocator when freeing overallocated data. #1720
+- Use `weak_odr` rather than `weak` on Windows which seems to prevent issues such as #1704.
+- Use `weak` on dyn-symbols on Linux.
+- Fix crash on project.json not having an empty set of targets.
+- Miscompile when indexing an array with small unsigned types for enums.
+- Change CBool to be 1 byte.
+- `any_to_int` checks value to be int and no longer works with enum.
+- Add check in formatter printing "%c".
+- Fix bug where `!!` and `!` was not recognized to jump out of the current scope.
+- Fix bug when including compile time parameters in trailing body more than once.
+- Fix issue with compiling a constant struct containing a string array in a local context.
+- Fix error where panic would not properly stop the program when stacktrace couldn't be printed #1751.
+- Macros with default arguments to `&`, `#` and type parameters didn't work as expected. #1754.
 
 ### Stdlib changes
-None
+- Increase BitWriter.write_bits limit up to 32 bits.
+- Updates to `Slice2d`, like `get_xy` and others.
+- Added `iter()` `value_iter()` and `key_iter()` to HashMap.
+- Add "tokenizer" to String.
+- Add "skip_empty" to split methods. Add split_to_buffer method.
+- Add `@enum_from_value`.
 
 ## 0.6.5 Change list
 

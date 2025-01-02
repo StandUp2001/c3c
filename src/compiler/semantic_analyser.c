@@ -159,13 +159,19 @@ void sema_analyze_stage(Module *module, AnalysisStage stage)
 				sema_analysis_pass_register_global_declarations(module);
 				break;
 			case ANALYSIS_METHODS_REGISTER:
-				sema_analysis_pass_process_methods(module);
+				sema_analysis_pass_process_methods(module, false);
+				break;
+			case ANALYSIS_METHODS_REGISTER_GENERIC:
+				sema_analysis_pass_process_methods(module, true);
 				break;
 			case ANALYSIS_INCLUDES:
 				sema_analysis_pass_process_includes(module);
 				break;
 			case ANALYSIS_METHODS_INCLUDES:
-				sema_analysis_pass_process_methods(module);
+				sema_analysis_pass_process_methods(module, false);
+				break;
+			case ANALYSIS_METHODS_INCLUDES_GENERIC:
+				sema_analysis_pass_process_methods(module, true);
 				break;
 			case ANALYSIS_REGISTER_CONDITIONAL_UNITS:
 				sema_analysis_pass_register_conditional_units(module);
@@ -174,7 +180,10 @@ void sema_analyze_stage(Module *module, AnalysisStage stage)
 				sema_analysis_pass_register_conditional_declarations(module);
 				break;
 			case ANALYSIS_METHODS_CONDITIONAL:
-				sema_analysis_pass_process_methods(module);
+				sema_analysis_pass_process_methods(module, false);
+				break;
+			case ANALYSIS_METHODS_CONDITIONAL_GENERIC:
+				sema_analysis_pass_process_methods(module, true);
 				break;
 			case ANALYSIS_POST_REGISTER:
 				break;
@@ -208,15 +217,16 @@ static void register_generic_decls(CompilationUnit *unit, Decl **decls)
 		decl->unit = unit;
 		switch (decl->decl_kind)
 		{
-			case DECL_POISONED:
 			case DECL_ENUM_CONSTANT:
 			case DECL_FAULTVALUE:
-			case DECL_IMPORT:
-			case DECL_LABEL:
-			case DECL_CT_ASSERT:
-			case DECL_CT_ECHO:
 			case DECL_DECLARRAY:
 			case DECL_ERASED:
+			case DECL_LABEL:
+				UNREACHABLE
+			case DECL_POISONED:
+			case DECL_IMPORT:
+			case DECL_CT_ASSERT:
+			case DECL_CT_ECHO:
 			case DECL_FNTYPE:
 			case DECL_CT_INCLUDE:
 			case DECL_CT_EXEC:
@@ -264,7 +274,6 @@ static void sema_analyze_to_stage(AnalysisStage stage)
 {
 	if (stage <= ANALYSIS_MODULE_TOP)
 	{
-
 		FOREACH(Module *, module, compiler.context.generic_module_list)
 		{
 			sema_analyze_stage(module, stage);

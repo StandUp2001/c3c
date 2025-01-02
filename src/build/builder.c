@@ -74,7 +74,6 @@ bool command_accepts_files(CompilerCommand command)
 		case COMMAND_CONVERT:
 			return true;
 		case COMMAND_MISSING:
-		case COMMAND_GENERATE_HEADERS:
 		case COMMAND_INIT:
 		case COMMAND_INIT_LIB:
 		case COMMAND_BUILD:
@@ -110,7 +109,6 @@ bool command_passes_args(CompilerCommand command)
 		case COMMAND_COMPILE_TEST:
 		case COMMAND_UNIT_TEST:
 		case COMMAND_MISSING:
-		case COMMAND_GENERATE_HEADERS:
 		case COMMAND_INIT:
 		case COMMAND_INIT_LIB:
 		case COMMAND_BUILD:
@@ -311,7 +309,8 @@ static void update_build_target_from_options(BuildTarget *target, BuildOptions *
 		case COMMAND_BUILD:
 			target->output_headers = (target->type == TARGET_TYPE_DYNAMIC_LIB || target->type == TARGET_TYPE_STATIC_LIB) && !options->no_headers;
 			break;
-		case COMMAND_GENERATE_HEADERS:
+		case COMMAND_STATIC_LIB:
+		case COMMAND_DYNAMIC_LIB:
 			target->output_headers = true;
 			break;
 		default:
@@ -408,6 +407,7 @@ static void update_build_target_from_options(BuildTarget *target, BuildOptions *
 	target->vector_conv = options->vector_conv;
 	if (options->macos.sysroot) target->macos.sysroot = options->macos.sysroot;
 	if (options->win.sdk) target->win.sdk = options->win.sdk;
+	if (options->win.vs_dirs) target->win.vs_dirs = options->win.vs_dirs;
 	if (options->macos.min_version) target->macos.min_version = options->macos.min_version;
 	if (options->macos.sdk_version) target->macos.sdk_version = options->macos.sdk_version;
 	if (options->win.crt_linking != WIN_CRT_DEFAULT) target->win.crt_linking = options->win.crt_linking;
@@ -523,6 +523,7 @@ void init_default_build_target(BuildTarget *target, BuildOptions *options)
 	*target = default_build_target;
 	target->source_dirs = options->files;
 	target->name = options->output_name;
+	target->output_name = options->output_name;
 	update_build_target_from_options(target, options);
 }
 

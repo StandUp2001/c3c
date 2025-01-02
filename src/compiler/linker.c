@@ -12,11 +12,11 @@ const char *quote_arg = "\"";
 const char *concat_arg = ":";
 const char *concat_quote_arg = "+";
 const char *concat_file_arg = "/";
-#define add_quote_arg(arg_) vec_add(*args_ref, quote_arg); vec_add(*args_ref, (arg_))
+#define add_quote_arg(arg_) do { vec_add(*args_ref, quote_arg); vec_add(*args_ref, (arg_)); } while(0)
 #define add_plain_arg(arg_) vec_add(*args_ref, (arg_))
-#define add_concat_file_arg(arg_, arg2_) vec_add(*args_ref, concat_file_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_))
-#define add_concat_arg(arg_, arg2_) vec_add(*args_ref, concat_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_))
-#define add_concat_quote_arg(arg_, arg2_) vec_add(*args_ref, concat_quote_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_))
+#define add_concat_file_arg(arg_, arg2_) do { vec_add(*args_ref, concat_file_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_)); } while(0)
+#define add_concat_arg(arg_, arg2_) do { vec_add(*args_ref, concat_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_)); } while(0)
+#define add_concat_quote_arg(arg_, arg2_) do { vec_add(*args_ref, concat_quote_arg); vec_add(*args_ref, (arg_)); vec_add(*args_ref, (arg2_)); } while(0)
 
 static char *assemble_linker_command(const char **args, bool extra_quote);
 static unsigned assemble_link_arguments(const char **arguments, unsigned len);
@@ -91,7 +91,7 @@ static void linker_setup_windows(const char ***args_ref, Linker linker_type, con
 		crt_linking = wincrt;
 	}
 
-	if (!compiler.build.win.sdk)
+	if (!compiler.build.win.sdk && !compiler.build.win.vs_dirs)
 	{
 		const char *path = windows_cross_compile_library();
 		if (path)
@@ -132,14 +132,36 @@ static void linker_setup_windows(const char ***args_ref, Linker linker_type, con
 	}
 	else
 	{
-		WindowsSDK *windows_sdk = windows_get_sdk();
-		if (!windows_sdk) error_exit("Windows applications cannot be cross compiled without --winsdk.");
+		if (compiler.build.win.vs_dirs)
+		{
+			char *c = strstr(compiler.build.win.vs_dirs, ";");
+			int len = c - compiler.build.win.vs_dirs;
+			if (!c || !len) error_exit("''win-vs-dirs' override was invalid.");
+			char *um = str_printf("%.*s\\um\\x64", len, compiler.build.win.vs_dirs);
+			char *ucrt = str_printf("%.*s\\ucrt\\x64", len, compiler.build.win.vs_dirs);
+			c++;
+			if (!file_is_dir(um) || !file_is_dir(ucrt) || !file_is_dir(c))
+			{
+				error_exit("''win-vs-dirs' override paths were not valid.");
+			}
+			add_concat_quote_arg("/LIBPATH:", um);
+			add_concat_quote_arg("/LIBPATH:", ucrt);
+			add_concat_quote_arg("/LIBPATH:", c);
+		}
+		else
+		{
+			WindowsSDK *windows_sdk = windows_get_sdk();
+			if (!windows_sdk) error_exit("Windows applications cannot be cross compiled without --winsdk.");
 
-		if (!file_is_dir(windows_sdk->vs_library_path)) error_exit("Failed to find windows sdk.");
+			if (!file_is_dir(windows_sdk->vs_library_path)) error_exit("Failed to find windows sdk.");
 
-		add_concat_quote_arg("/LIBPATH:", windows_sdk->windows_sdk_um_library_path);
-		add_concat_quote_arg("/LIBPATH:", windows_sdk->windows_sdk_ucrt_library_path);
-		add_concat_quote_arg("/LIBPATH:", windows_sdk->vs_library_path);
+			char *um = str_printf("%s\\um\\x64", windows_sdk->windows_sdk_path);
+			char *ucrt = str_printf("%s\\ucrt\\x64", windows_sdk->windows_sdk_path);
+
+			add_concat_quote_arg("/LIBPATH:", um);
+			add_concat_quote_arg("/LIBPATH:", ucrt);
+			add_concat_quote_arg("/LIBPATH:", windows_sdk->vs_library_path);
+		}
 	}
 
 	// Link sanitizer runtime libraries
@@ -308,6 +330,13 @@ static const char *find_arch_glob_path(const char *glob_path, int file_len)
 static const char *find_linux_crt(void)
 {
 	if (compiler.build.linuxpaths.crt) return compiler.build.linuxpaths.crt;
+	const char *arch_linux_crt1_path = "/usr/lib/crt1.o";
+	if (file_exists(arch_linux_crt1_path))
+	{
+		const char *arch_linux_path = "/usr/lib";
+		INFO_LOG("Found crt at %s", arch_linux_path);
+		return arch_linux_path;
+	}
 	const char *path = find_arch_glob_path("/usr/lib/*/crt1.o", 6);
 	if (!path)
 	{
@@ -331,7 +360,7 @@ static const char *find_linux_crt_begin(void)
 	return path;
 }
 
-static void linker_setup_linux(const char ***args_ref, Linker linker_type)
+static void linker_setup_linux(const char ***args_ref, Linker linker_type, bool is_dylib)
 {
 	linking_add_link(&compiler.linking, "dl");
 	if (linker_type == LINKER_CC)
@@ -374,16 +403,16 @@ static void linker_setup_linux(const char ***args_ref, Linker linker_type)
 	}
 	if (is_pie_pic(compiler.platform.reloc_model))
 	{
-		add_concat_file_arg(crt_dir, "Scrt1.o");
-		add_concat_file_arg(crt_begin_dir, "crtbeginS.o");
 		add_concat_file_arg(crt_dir, "crti.o");
+		if (!is_dylib) add_concat_file_arg(crt_dir, "Scrt1.o");
+		add_concat_file_arg(crt_begin_dir, "crtbeginS.o");
 		add_concat_file_arg(crt_begin_dir, "crtendS.o");
 	}
 	else
 	{
-		add_concat_file_arg(crt_dir, "crt1.o");
-		add_concat_file_arg(crt_begin_dir, "crtbegin.o");
 		add_concat_file_arg(crt_dir, "crti.o");
+		if (!is_dylib) add_concat_file_arg(crt_dir, "crt1.o");
+		add_concat_file_arg(crt_begin_dir, "crtbegin.o");
 		add_concat_file_arg(crt_begin_dir, "crtend.o");
 	}
 	add_concat_file_arg(crt_dir, "crtn.o");
@@ -399,7 +428,7 @@ static void linker_setup_linux(const char ***args_ref, Linker linker_type)
 	add_plain_arg(ld_target(compiler.platform.arch));
 }
 
-static void linker_setup_freebsd(const char ***args_ref, Linker linker_type)
+static void linker_setup_freebsd(const char ***args_ref, Linker linker_type, bool is_dylib)
 {
 	if (linker_type == LINKER_CC) {
 		linking_add_link(&compiler.linking, "m");
@@ -421,20 +450,19 @@ static void linker_setup_freebsd(const char ***args_ref, Linker linker_type)
 	{
 		add_plain_arg("--gc-sections");
 	}
-
 	if (is_pie_pic(compiler.platform.reloc_model))
 	{
 		add_plain_arg("-pie");
-		add_concat_file_arg(crt_dir, "Scrt1.o");
-		add_concat_file_arg(crt_dir, "crtbeginS.o");
 		add_concat_file_arg(crt_dir, "crti.o");
+		if (!is_dylib) add_concat_file_arg(crt_dir, "Scrt1.o");
+		add_concat_file_arg(crt_dir, "crtbeginS.o");
 		add_concat_file_arg(crt_dir, "crtendS.o");
 	}
 	else
 	{
-		add_concat_file_arg(crt_dir, "crt1.o");
-		add_concat_file_arg(crt_dir, "crtbegin.o");
 		add_concat_file_arg(crt_dir, "crti.o");
+		if (!is_dylib) add_concat_file_arg(crt_dir, "crt1.o");
+		add_concat_file_arg(crt_dir, "crtbegin.o");
 		add_concat_file_arg(crt_dir, "crtend.o");
 	}
 	add_concat_file_arg(crt_dir, "crtn.o");
@@ -546,10 +574,10 @@ static bool linker_setup(const char ***args_ref, const char **files_to_link, uns
 		case OS_TYPE_FREE_BSD:
 		case OS_TYPE_OPENBSD:
 		case OS_TYPE_NETBSD:
-			linker_setup_freebsd(args_ref, linker_type);
+			linker_setup_freebsd(args_ref, linker_type, is_dylib);
 			break;
 		case OS_TYPE_LINUX:
-			linker_setup_linux(args_ref, linker_type);
+			linker_setup_linux(args_ref, linker_type, is_dylib);
 			break;
 		case OS_TYPE_UNKNOWN:
 			if (link_libc())

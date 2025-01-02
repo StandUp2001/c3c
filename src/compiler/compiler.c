@@ -36,6 +36,13 @@ static double compiler_link_time;
 const char* c3_suffix_list[3] = { ".c3", ".c3t", ".c3i" };
 
 
+static const char *out_name(void)
+{
+	if (compiler.build.output_name) return compiler.build.output_name;
+	if (compiler.build.name) return compiler.build.name;
+	return NULL;
+}
+
 void compiler_init(BuildOptions *build_options)
 {
 	// Process --path
@@ -150,12 +157,8 @@ void **tilde_gen(Module** modules, unsigned module_count)
 
 const char *build_base_name(void)
 {
-	const char *name;
-	if (compiler.build.name)
-	{
-		name = compiler.build.name;
-	}
-	else
+	const char *name = out_name();
+	if (!name)
 	{
 		Module **modules = compiler.context.module_list;
 		Module *main_module = (modules[0] == compiler.context.core_module && vec_size(modules) > 1) ? modules[1] : modules[0];
@@ -176,13 +179,13 @@ const char *build_base_name(void)
 
 static const char *exe_name(void)
 {
-	ASSERT0(compiler.build.name || compiler.context.main || compiler.build.no_entry);
-	const char *name;
-	if (compiler.build.name || compiler.build.no_entry)
+	ASSERT0(compiler.build.output_name || compiler.build.name || compiler.context.main || compiler.build.no_entry);
+	const char *name = out_name();
+	if (!name && compiler.build.no_entry)
 	{
-		name = compiler.build.name ? compiler.build.name : "out";
+		name = "out";
 	}
-	else
+	if (!name)
 	{
 		Path *path = compiler.context.main->unit->module->name;
 		size_t first = 0;
@@ -465,6 +468,9 @@ void compiler_compile(void)
 
 	switch (compiler.build.backend)
 	{
+		case BACKEND_C:
+			gen_contexts = c_gen(modules, module_count);
+			error_exit("Unfinished C backend!");
 		case BACKEND_LLVM:
 #if LLVM_AVAILABLE
 			gen_contexts = llvm_gen(modules, module_count);
@@ -939,7 +945,7 @@ void print_syntax(BuildOptions *options)
 			if (i == TOKEN_DOCS_START || i == TOKEN_DOCS_END) continue;
 			const char *name = token_type_to_string((TokenType)i);
 			char first_char = name[0];
-			if (first_char == '$' || first_char == '@'
+			if (first_char == '$' || first_char == '@' || first_char == '_' || first_char == '#'
 				|| (first_char >= 'a' && first_char <= 'z')
 				|| (first_char >= 'A' && first_char <= 'Z'))
 			{

@@ -47,6 +47,7 @@ const char *kw_at_pure;
 const char *kw_at_require;
 const char *kw_at_return;
 const char *kw_at_jump;
+const char *kw_construct;
 const char *kw_in;
 const char *kw_inout;
 const char *kw_len;
@@ -133,6 +134,7 @@ void symtab_init(uint32_t capacity)
 	kw_IoError = KW_DEF("IoError");
 
 	type = TOKEN_IDENT;
+	kw_construct = KW_DEF("construct");
 	kw_in = KW_DEF("in");
 	kw_inout = KW_DEF("inout");
 	kw_libc = KW_DEF("libc");
@@ -162,6 +164,7 @@ void symtab_init(uint32_t capacity)
 	type_property_list[TYPE_PROPERTY_ASSOCIATED] = KW_DEF("associated");
 	type_property_list[TYPE_PROPERTY_ELEMENTS] = KW_DEF("elements");
 	type_property_list[TYPE_PROPERTY_EXTNAMEOF] = KW_DEF("extnameof");
+	type_property_list[TYPE_PROPERTY_FROM_ORDINAL] = KW_DEF("from_ordinal");
 	type_property_list[TYPE_PROPERTY_GET] = KW_DEF("get");
 	type_property_list[TYPE_PROPERTY_INF] = KW_DEF("inf");
 	type_property_list[TYPE_PROPERTY_INNER] = KW_DEF("inner");

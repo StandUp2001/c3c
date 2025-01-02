@@ -17,8 +17,9 @@
 
 typedef enum
 {
-	BACKEND_LLVM = 1,
-	BACKEND_TB = 2
+	BACKEND_LLVM = 0,
+	BACKEND_TB = 1,
+	BACKEND_C = 2,
 } CompilerBackend;
 
 typedef enum
@@ -28,7 +29,6 @@ typedef enum
 	COMMAND_COMPILE_ONLY,
 	COMMAND_COMPILE_BENCHMARK,
 	COMMAND_COMPILE_TEST,
-	COMMAND_GENERATE_HEADERS,
 	COMMAND_INIT,
 	COMMAND_INIT_LIB,
 	COMMAND_BUILD,
@@ -417,6 +417,7 @@ typedef struct BuildOptions_
 	{
 		const char *sdk;
 		const char *def;
+		const char *vs_dirs;
 		WinCrtLinking crt_linking;
 	} win;
 	struct
@@ -454,6 +455,7 @@ typedef struct BuildOptions_
 		ProjectSubcommand command;
 		const char *target_name;
 		TargetType target_type;
+		const char **sources;
 	} project_options;
 	CompileOption compile_option;
 	TrustLevel trust_level;
@@ -557,6 +559,7 @@ typedef struct
 	Library **library_list;
 	LibraryTarget **ccompiling_libraries;
 	const char *name;
+	const char *output_name;
 	const char *version;
 	const char *langrev;
 	const char **source_dirs;
@@ -663,6 +666,7 @@ typedef struct
 	{
 		const char *sdk;
 		const char *def;
+		const char *vs_dirs;
 		WinCrtLinking crt_linking;
 		bool use_win_subsystem;
 	} win;

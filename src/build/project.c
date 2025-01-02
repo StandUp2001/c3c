@@ -101,6 +101,7 @@ const char* project_target_keys[][2] = {
 		{"macos-sdk-version", "Set the MacOS SDK compiled for." },
 		{"macossdk", "Set the directory for the MacOS SDK for cross compilation."},
 		{"memory-env", "Set the memory environment: normal, small, tiny, none."},
+		{"name", "Set the name to be different from the target name."},
 		{"no-entry", "Do not generate (or require) a main function."},
 		{"opt", "Optimization setting: O0, O1, O2, O3, O4, O5, Os, Oz."},
 		{"optlevel", "Code optimization level: none, less, more, max."},
@@ -247,6 +248,9 @@ static void load_into_build_target(const char *filename, JSONObject *json, const
 	target->feature.panic_level = (PanicLevel)get_valid_bool(filename, target_name, json, "panic-msg",
 	                                                         target->feature.panic_level);
 
+	// Overridden name
+	target->output_name = get_optional_string(filename, target_name, json, "name");
+
 	// Single module
 	target->single_module = (SingleModule) get_valid_bool(filename, target_name, json, "single-module", target->single_module);
 
@@ -333,6 +337,9 @@ static void load_into_build_target(const char *filename, JSONObject *json, const
 	// riscvfloat
 	RiscvFloatCapability riscv_float = GET_SETTING(RiscvFloatCapability, "riscvfloat", riscv_capability, "`none`, `float` or `double`.");
 	if (riscv_float != RISCVFLOAT_DEFAULT) target->feature.riscv_float_capability = riscv_float;
+
+	// winsdk
+	target->win.vs_dirs = get_string(filename, target_name, json, "win-vs-dirs", target->win.vs_dirs);
 
 	// winsdk
 	target->win.sdk = get_string(filename, target_name, json, "winsdk", target->win.sdk);

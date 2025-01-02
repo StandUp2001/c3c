@@ -60,7 +60,7 @@ fn void*! native_freopen(void* file, String filename, String mode) @inline
 
 fn void! native_fseek(void* file, isz offset, Seek seek_mode) @inline
 {
-	if (libc::fseek(file, (SeekIndex)offset, (CInt)seek_mode)) return file_seek_errno()?;
+	if (libc::fseek(file, (SeekIndex)offset, seek_mode.ordinal)) return file_seek_errno()?;
 }
 
 
@@ -77,7 +77,7 @@ fn usz! native_fwrite(CFile file, char[] buffer) @inline
 
 fn void! native_fputc(CInt c, CFile stream) @inline
 {
-	if (!libc::fputc(c, stream)) return IoError.EOF?;
+	if (libc::fputc(c, stream) == libc::EOF) return IoError.EOF?;
 }
 
 fn usz! native_fread(CFile file, char[] buffer) @inline
