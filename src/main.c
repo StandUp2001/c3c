@@ -76,7 +76,6 @@ int main_real(int argc, const char *argv[])
 		case COMMAND_CONVERT:
 			convert_files(&build_options);
 			break;
-		case COMMAND_GENERATE_HEADERS:
 		case COMMAND_COMPILE:
 		case COMMAND_COMPILE_ONLY:
 		case COMMAND_COMPILE_RUN:
